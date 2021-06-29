@@ -13,7 +13,7 @@ const { setCors } = require("./middleware/security");
 var app = express();
 app.use(logger("dev"));
 mongoose.connect(
-  `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.4z6q6.mongodb.net/blog?retryWrites=true&w=majority`,
+  "mongodb+srv://Sara:Test1234@cluster0.4z6q6.mongodb.net/blog?retryWrites=true&w=majority",
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
