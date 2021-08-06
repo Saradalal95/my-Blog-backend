@@ -2,14 +2,13 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-
+const config = require("../config/configs");
 const UserSchema = new Schema(
   {
-    Name: {
+    name: {
       type: String,
       required: true,
     },
-
     email: {
       type: String,
       required: true,
@@ -31,27 +30,27 @@ const UserSchema = new Schema(
 
 UserSchema.methods.generateAuthToken = function () {
   const user = this;
+  const access = "auth";
 
   const token = jwt
-    .sign({ _id: user._id.toHexString() }, "FbW43-2-110%")
+    .sign({ _id: user._id.toHexString() }, config.jwt_key)
     .toString();
-
   return token;
 };
 
 UserSchema.methods.getPublicFields = function () {
   var returnObject = {
-    firstName: this.firstName,
+    name: this.name,
     email: this.email,
     _id: this._id,
   };
+
   return returnObject;
 };
 
-UserSchema.methods.checkPassword = function (password) {
+UserSchema.methods.checkPassword = async function (password) {
   const user = this;
-
-  return bcrypt.compare(password, user.password);
+  return await bcrypt.compare(password, user.password);
 };
 
 UserSchema.statics.findByToken = function (token) {
@@ -59,23 +58,21 @@ UserSchema.statics.findByToken = function (token) {
   let decoded;
 
   try {
-    decoded = jwt.verify(token, "FbW43-2-110%");
-    console.log(decoded);
-  } catch (error) {
-    console.log(error);
+    decoded = jwt.verify(token, config.jwt_key);
+  } catch (e) {
     return;
   }
+
   return User.findOne({
     _id: decoded._id,
   });
 };
 
 UserSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 10);
-  } else {
-    return next();
-  }
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("user", UserSchema);

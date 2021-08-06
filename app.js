@@ -3,22 +3,23 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const mongoose = require("mongoose");
+const config = require("./config/configs");
 const dotenv = require("dotenv");
 dotenv.config();
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var postsRouter = require("./routes/posts");
-
+var cors = require("cors");
 const { setCors } = require("./middleware/security");
 var app = express();
+app.use(cors());
+app.options("*", cors());
 app.use(logger("dev"));
-mongoose.connect(
-  "mongodb+srv://Sara:Test1234@cluster0.4z6q6.mongodb.net/blog?retryWrites=true&w=majority",
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-);
+mongoose.connect(config.db, {
+  useNewUrlParser: true,
+  // useCreateIndex: true,
+  useUnifiedTopology: true,
+});
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {

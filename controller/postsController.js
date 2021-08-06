@@ -6,86 +6,102 @@ const Post = require("../models/Post");
 const createError = require("http-errors");
 exports.getPosts = async (req, res, next) => {
   try {
-    const posts = await Post.find();
+    const posts = await Post.find().populate("userId", "name");
     res.status(200).send(posts);
   } catch (error) {
     next(error);
   }
 };
+// exports.addPost = async (req, res, next) => {
+//   try {
+//     var data = {
+//       title: req.body.title,
+//       content: req.body.content,
+//       userId: req.user._id,
+//     };
+//     console.log(data);
+//     console.log(req.user);
+//     const post = new Post(data);
+//     await post.save();
+//     res.status(200).send(post);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 exports.addPost = async (req, res, next) => {
+  var data = {
+    title: req.body.title,
+    content: req.body.content,
+    userId: req.user._id,
+  };
   try {
-    const post = new Post(req.body);
+    const post = new Post(data);
     await post.save();
-    res.status(200).send(post);
-  } catch (error) {
-    next(error);
+    res.status(201).send(post);
+  } catch (e) {
+    next(e);
   }
-  // try {
-  //   if (req.body.name === "") {
-  //     const error = new Error("there is no post to add");
-  //     error.status = 400;
-  //     error.stack = null;
-  //     next(error);
-  //   } else {
-  //     const post = req.body;
-  //     db.get("posts")
-  //       .push(post)
-  //       .last()
-  //       .assign({ id: Math.floor(Math.random() * 10).toString() })
-  //       .write();
-  //     res.status(201).send(post);
-  //   }
-  // } catch (error) {
-  //   console.log(error);
-  //   next(error);
-  // }
 };
 exports.deletePost = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const post = await Post.findByIdAndDelete(id);
-    if (!post) {
-      throw new createError.NotFound();
+    const findPostById = await Post.findById(id);
+    console.log(findPostById);
+    console.log(req.user);
+    if (req.user._id.toString() == findPostById.userId.toString()) {
+      const post = await Post.deleteOne({ _id: id });
+      res.status(200).send(post);
+    } else {
+      res.json("notauth");
     }
-    res.status(200).send(post);
+    // const post = await Post.deleteOne({ _id: id });
+    // res.status(200).send(post);
   } catch (error) {
     next(error);
   }
-  // try {
-  //   const inputId = req.body.id;
-  //   db.get("posts").remove({ id: inputId }).write();
-  //   res.status(200).send("Success");
-  // } catch (error) {
-  //   console.log(error);
-  //   next(error);
-  // }
 };
+
+// exports.deletePost = async (req, res, next) => {
+//   const { id } = req.params;
+//   try {
+//     const findPostById = await Post.findById(id);
+//     console.log("user", req.user);
+//     if (req.user._id.toString() == findPostById.userId.toString()) {
+//       const post = await Post.deleteOne({ _id: id });
+//       res.status(200).send(post);
+//     } else {
+//       res.json("notauth");
+//     }
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// exports.deletePost = async (req, res, next) => {
+//   const { id } = req.params;
+//   try {
+//     const post = await Post.findByIdAndDelete(id);
+//     if (req.user._id.toString() == findPostById.userId.toString()) {
+//       const post = await Post.deleteOne({ _id: id });
+//       res.status(200).send(post);
+//     }
+//   } catch (e) {
+//     next(e);
+//   }
+// };
+
 exports.updatePost = async (req, res, next) => {
   const { id } = req.params;
-  const dt = req.body;
-  try {
-    const post = await Post.findByIdAndUpdate(id, dt, { new: true });
-    if (!post) {
-      throw new createError.NotFound();
-    }
-
+try {
+  const findPostById = await Post.findById(id);
+  console.log(findPostById);
+  console.log(req.user);
+  if (req.user._id.toString() == findPostById.userId.toString()) {
+    const post = await Post.findByIdAndUpdate(id, req.body, { new: true });
     res.status(200).send(post);
-  } catch (error) {
-    next(error);
+  } else {
+    res.json("notauth");
   }
-  // try {
-  //   const postId = req.body.id;
-  //   const post = db.get("posts").find({ id: postId }).value();
-  //   db.get("posts")
-  //     .find({ id: postId })
-  //     .assign({
-  //       title: req.body.title,
-  //       content: req.body.content,
-  //     })
-  //     .write();
-  //   res.status(200).send(post);
-  // } catch (error) {
-  //   console.log(error);
-  //   next(error);
-  // }
+} catch (error) {
+  next(error);
+}
 };

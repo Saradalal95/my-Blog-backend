@@ -52,6 +52,7 @@ exports.addUser = async (req, res, next) => {
     await user.save();
     /** Send back the token with public fields to user */
     const data = user.getPublicFields();
+    console.log(token);
     res.status(200).header("auth", token).send(data);
   } catch (e) {
     next(e);
@@ -74,7 +75,7 @@ exports.loginUser = async (req, res, next) => {
     // retrieve a token
     const token = user.generateAuthToken();
     const data = user.getPublicFields();
-
+    data.token = token;
     // respond with token and public fields
     res.status(200).header("auth", token).send(data);
   } catch (error) {
